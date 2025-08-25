@@ -184,7 +184,7 @@ export default function ResetPassword() {
                           <FormLabel className="text-gray-300 font-medium">Reset Code</FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="Enter your 6-digit reset code"
+                              placeholder="Enter your 5-digit reset code"
                               {...field}
                               className="bg-crypto-dark/50 backdrop-blur-sm border-gray-600/50 text-black placeholder-gray-400 focus:border-purple-500/50 input-focus-glow transition-all duration-300 text-center text-lg tracking-widest"
                               maxLength={6}
@@ -213,7 +213,7 @@ export default function ResetPassword() {
                               type="password"
                               placeholder="Create a strong new password"
                               {...field}
-                              className="bg-crypto-dark/50 backdrop-blur-sm border-gray-600/50 text-white placeholder-gray-400 focus:border-purple-500/50 input-focus-glow transition-all duration-300"
+                              className="bg-crypto-dark/50 backdrop-blur-sm border-gray-600/50 text-black placeholder-gray-400 focus:border-purple-500/50 input-focus-glow transition-all duration-300"
                               data-testid="input-new-password"
                             />
                           </FormControl>
