@@ -1,0 +1,19 @@
+[
+  {
+    "username": "testuser",
+    "email": "test@example.com",
+    "password": "password123",
+    "verificationCode": "32213",
+    "verificationCodeExpires": "2025-08-23T17:07:37.181Z"
+  },
+  {
+    "id": "9210cf25-1ffc-4bfe-a16f-d93307727f68",
+    "username": "Sophie ",
+    "email": "sophiemae802@gmail.com",
+    "password": "$2b$10$bdjXXnc9SclxHG1VDC2VG.uoqop4hCx0OfLyd.fKxmvz51bh0w6Zy",
+    "referralCode": null,
+    "createdAt": "2025-08-25T17:58:18.816Z",
+    "verificationCode": "65854",
+    "verificationCodeExpires": "2025-08-26T17:58:18.817Z"
+  }
+]
