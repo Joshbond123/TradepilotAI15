@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { randomUUID } from "crypto";
+import * as bcrypt from 'bcrypt';
 
 // File-based storage paths
 const DATA_DIR = path.join(process.cwd(), "database");
@@ -424,23 +425,42 @@ export class FileStorage implements IStorage {
   }
 
   async resetPassword(email: string, resetCode: string, newPassword: string): Promise<boolean> {
-    const users = this.readFile(USERS_FILE);
-    const userIndex = users.findIndex((user: any) => user.email === email);
-    if (userIndex === -1) return false;
-    
-    const user = users[userIndex] as any;
-    
-    // Check if reset code matches and hasn't expired
-    if (user.resetCode !== resetCode) return false;
-    if (!user.resetCodeExpires || new Date() > new Date(user.resetCodeExpires)) return false;
-    
-    // Update password and clear reset code
-    user.password = newPassword;
-    delete user.resetCode;
-    delete user.resetCodeExpires;
-    users[userIndex] = user;
-    this.writeFile(USERS_FILE, users);
-    return true;
+    try {
+      const users = this.readFile(USERS_FILE);
+      const userIndex = users.findIndex((user: any) => user.email === email);
+      if (userIndex === -1) {
+        console.error(`User with email ${email} not found`);
+        return false;
+      }
+      
+      const user = users[userIndex] as any;
+      
+      // Check if reset code matches and hasn't expired
+      if (user.resetCode !== resetCode) {
+        console.error(`Invalid reset code for email ${email}`);
+        return false;
+      }
+      if (!user.resetCodeExpires || new Date() > new Date(user.resetCodeExpires)) {
+        console.error(`Reset code expired for email ${email}`);
+        return false;
+      }
+      
+      // Hash the new password
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+      
+      // Update password and clear reset code
+      user.password = hashedPassword;
+      delete user.resetCode;
+      delete user.resetCodeExpires;
+      users[userIndex] = user;
+      this.writeFile(USERS_FILE, users);
+      console.log(`Password reset successful for email ${email}`);
+      return true;
+    } catch (error) {
+      console.error(`Error resetting password for email ${email}:`, error);
+      return false;
+    }
   }
 
   async deleteUser(id: string): Promise<boolean> {
@@ -1012,8 +1032,6 @@ export class FileStorage implements IStorage {
     const users = this.readFile(USERS_FILE);
     return users.find((user: any) => user.referralCode === referralCode);
   }
-
-  // Removed duplicate createLoginLog function - using the one below with proper typing
 
   private generateReferralCode(): string {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
