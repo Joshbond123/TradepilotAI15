@@ -345,6 +345,11 @@ export interface IStorage {
   // Audit logs
   logAction(action: any): Promise<void>;
   getAuditLogs(): Promise<any[]>;
+  
+  // AI Chat Conversation methods
+  getAIChatConversations(): Promise<any[]>;
+  saveAIChatConversations(conversations: any[]): Promise<void>;
+  cleanupChatMessages(cutoff: string): Promise<void>;
 }
 
 export class FileStorage implements IStorage {
@@ -838,6 +843,36 @@ export class FileStorage implements IStorage {
 
   async saveAIChatConversations(conversations: any[]): Promise<void> {
     this.writeFile(AI_CHAT_CONVERSATIONS_FILE, conversations);
+  }
+
+  async cleanupChatMessages(cutoff: string): Promise<void> {
+    try {
+      const conversations = this.readFile(AI_CHAT_CONVERSATIONS_FILE);
+      // Update each conversation by filtering its messages
+      const updatedConversations = conversations.map((conversation: any) => {
+        const filteredMessages = conversation.messages.filter((message: any) => {
+          const messageDate = new Date(message.created_at);
+          return messageDate >= new Date(cutoff);
+        });
+        // Update last_activity to the latest message's created_at, or null if no messages remain
+        const lastActivity = filteredMessages.length > 0 
+          ? filteredMessages.reduce((latest: string, msg: any) => 
+              new Date(msg.created_at) > new Date(latest) ? msg.created_at : latest, 
+              filteredMessages[0].created_at
+            )
+          : null;
+        return {
+          ...conversation,
+          messages: filteredMessages,
+          last_activity: lastActivity
+        };
+      });
+      // Write the updated conversations back to the file
+      this.writeFile(AI_CHAT_CONVERSATIONS_FILE, updatedConversations);
+    } catch (error) {
+      console.error('Error in cleanupChatMessages:', error);
+      throw error;
+    }
   }
 
   // Inbox message methods
