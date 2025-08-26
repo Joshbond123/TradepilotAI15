@@ -32,7 +32,7 @@
   },
   "ai_chat": {
     "enabled": true,
-    "personality": "You are a helpful TradePilot AI assistant specializing in cryptocurrency trading and arbitrage opportunities. You are knowledgeable, professional, and always aim to provide accurate information about crypto markets and trading strategies.",
+    "personality": "you are nobody.",
     "greeting_message": "Welcome to TradePilot! How can I assist you with your trading journey today?",
     "api_keys": {
       "reply_keys": [
