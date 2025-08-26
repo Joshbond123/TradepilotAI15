@@ -9,7 +9,9 @@ import {
   Settings,
   User,
   LogOut,
+  Download,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const sidebarMenuItems = [
   { path: "/inbox", label: "Inbox", icon: Inbox },
@@ -24,6 +26,7 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [location, setLocation] = useLocation();
   const { user, logout } = useAuth();
+  const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
 
   // Get unread inbox count
   const { data: unreadData } = useQuery<{ count: number }>({
@@ -34,6 +37,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const unreadCount = unreadData?.count || 0;
 
+  // Capture PWA install prompt
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
   const handleNavigation = (path: string) => {
     setLocation(path);
     onClose();
@@ -41,6 +54,21 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const handleLogout = () => {
     logout();
+    onClose();
+  };
+
+  const handleDownloadApp = async () => {
+    if (deferredPrompt) {
+      // Trigger PWA install prompt
+      (deferredPrompt as any).prompt();
+      const { outcome } = await (deferredPrompt as any).userChoice;
+      console.log(`PWA installation ${outcome === 'accepted' ? 'accepted' : 'dismissed'}`);
+      setDeferredPrompt(null);
+    } else {
+      // Fallback: Navigate to download page or external link
+      setLocation('/download');
+      // Alternative: window.open('https://play.google.com/store/apps/details?id=com.tradepilot', '_blank');
+    }
     onClose();
   };
 
@@ -110,8 +138,17 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           {/* Spacer */}
           <div className="flex-1"></div>
           
-          {/* Logout at bottom */}
+          {/* Download App and Logout at bottom */}
           <div className="p-4 border-t border-slate-700">
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-blue-400 hover:text-blue-300 hover:bg-blue-900/20 mb-2"
+              onClick={handleDownloadApp}
+              data-testid="button-download-app"
+            >
+              <Download className="w-4 h-4 mr-3" />
+              Download App
+            </Button>
             <Button
               variant="ghost"
               className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-900/20"
@@ -133,4 +170,4 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       </div>
     </>
   );
-}
+    }
