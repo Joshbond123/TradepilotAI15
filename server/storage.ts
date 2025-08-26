@@ -351,6 +351,7 @@ export interface IStorage {
   getAIChatConversations(): Promise<any[]>;
   saveAIChatConversations(conversations: any[]): Promise<void>;
   cleanupChatMessages(cutoff: string): Promise<void>;
+  addChatMessage(message: any): Promise<void>; // Added method
 }
 
 export class FileStorage implements IStorage {
@@ -740,8 +741,8 @@ export class FileStorage implements IStorage {
       approved_at: new Date().toISOString()
     };
     
-    const currentWithdrawal2 = withdrawals[withdrawalIndex] as any;
-    withdrawals[withdrawalIndex] = { ...currentWithdrawal2, ...updates };
+    const currentWithdrawal = withdrawals[withdrawalIndex] as any;
+    withdrawals[withdrawalIndex] = { ...currentWithdrawal, ...updates };
     this.writeFile(WITHDRAWALS_FILE, withdrawals);
     return withdrawals[withdrawalIndex];
   }
@@ -891,6 +892,29 @@ export class FileStorage implements IStorage {
       this.writeFile(AI_CHAT_CONVERSATIONS_FILE, updatedConversations);
     } catch (error) {
       console.error('Error in cleanupChatMessages:', error);
+      throw error;
+    }
+  }
+
+  async addChatMessage(message: any): Promise<void> {
+    try {
+      const conversations = this.readFile(AI_CHAT_CONVERSATIONS_FILE);
+      const conversation = conversations.find((c: any) => c.userId === message.userId);
+      if (conversation) {
+        conversation.messages.push(message);
+        conversation.last_activity = message.created_at;
+        this.writeFile(AI_CHAT_CONVERSATIONS_FILE, conversations);
+      } else {
+        conversations.push({
+          userId: message.userId,
+          messages: [message],
+          last_activity: message.created_at
+        });
+        this.writeFile(AI_CHAT_CONVERSATIONS_FILE, conversations);
+      }
+      console.log(`Chat message added for user ${message.userId}`);
+    } catch (error) {
+      console.error(`Error adding chat message for user ${message.userId}:`, error);
       throw error;
     }
   }
